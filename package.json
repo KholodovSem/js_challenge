@@ -1,0 +1,32 @@
+{
+  "name": "js_challenge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "babel-node ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KholodovSem/js_challenge.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KholodovSem/js_challenge/issues"
+  },
+  "homepage": "https://github.com/KholodovSem/js_challenge#readme",
+  "dependencies": {
+    "@babel/cli": "^7.19.3",
+    "@babel/core": "^7.20.5",
+    "@babel/node": "^7.20.5",
+    "@babel/preset-env": "^7.20.2",
+    "chalk": "^5.1.2",
+    "cherio": "^1.0.0-rc.2",
+    "puppeteer": "^19.3.0",
+    "transliteration": "^2.3.5"
+  },
+  "devDependencies": {}
+}
