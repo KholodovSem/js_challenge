@@ -18,5 +18,5 @@ async function getLinks(URL, deep) {
   console.log(getLinks.links);
 }
 
-getLinks("https://madappgang.com", 3);
+getLinks("https://madappgang.com");
 
