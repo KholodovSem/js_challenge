@@ -23,10 +23,10 @@
     "@babel/core": "^7.20.5",
     "@babel/node": "^7.20.5",
     "@babel/preset-env": "^7.20.2",
-    "chalk": "^5.1.2",
     "cherio": "^1.0.0-rc.2",
-    "puppeteer": "^19.3.0",
-    "transliteration": "^2.3.5"
+    "commander": "^9.4.1",
+    "ora": "^6.1.2",
+    "puppeteer": "^19.3.0"
   },
   "devDependencies": {}
 }

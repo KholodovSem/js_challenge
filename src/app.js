@@ -1,74 +1,74 @@
-import puppeteer from 'puppeteer';
-import cheerio from 'cherio';
+import puppeteer from './helpers/puppeteer.js'
+import parseEmails from './helpers/parseEmails.js'
+import parseLinks from './helpers/parseLinks.js'
+import onlyUniqLinks from './helpers/onlyUniqLinks.js';
+import spinner from './cli/cli_spinner.js';
+import onlyUnique from './helpers/uniqValues.js';
+import argv from './cli/commander.js';
 
-const uniqEmails = [];
 
-const BASE_URL = 'https://madappgang.com';
-const regexp = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
 
-(async (URL) => {
-  const scraper = async (url) => {
-    try {
-      /* Start process */
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
-      await page.goto(url);
-      const content = await page.content();
+const BASE_URL = argv.url.endsWith("/") ? argv.url.slice(0, argv.url.length - 1) : argv.url;
 
-      /* Links storage */
-      const links = new Set();
+console.log(BASE_URL);
 
-      /* //!Next step */
-      // console.log("Deep: " + deep);
-      // const nextStep = deep - 1;
+const scraper = async (url) => {
+  try {
+    const emails = [];
 
-      /* Parse links */
-      const $ = cheerio.load(content);
-      $('a').each((i, link) => {
-        if ($(link).attr("href")
-          && $(link).attr("href").startsWith('/')
-          && !$(link).attr("href").includes('#')) {
+    spinner.start('Starting to look for links');
 
-          const fullLink = BASE_URL + $(link).attr('href');
-          links.add(fullLink);
-        }
-      })
+    /* Puppeteer */
+    const content = await puppeteer(url);
 
-      /* Parse Emails */
-      const emails = content.match(regexp);
-      console.log("Emails on page: " + url, emails);
+    /* Parse link on Base page */
+    const links = parseLinks(content, url);
 
-      /* Finish process */
-      browser.close();
-      return links;
+    /* Parse embeded links */
+    const parseEmbededLinks = async () => {
+      const embededLinks = [];
+      for (let link of links) {
+        const content = await puppeteer(link);
+        const newLinks = parseLinks(content, url);
+        newLinks.forEach(newLink => {
+          if (links.indexOf(newLink) === -1) {
+            embededLinks.push(newLink);
+          }
+        })
 
-      /* //!Recursion */
-      // if (deep <= 0) {
-      //   return
-      // } else {
-      //   for (let link of links) {
-      //     await scraper(link, nextStep)
-      //   }
-      // }
-
-    } catch (error) {
-      console.log(error);
-      // throw error;
+      }
+      /* Leave only unique links */
+      const uniqEmbededLinks = new Set(embededLinks);
+      return Array.from(uniqEmbededLinks);
     }
-  }
-  const arrayOfLinks = await scraper(URL);
 
-  const iterator = async (arr) => {
-    let counter = 0;
-    for (let link of arr) {
-      counter += 1;
-      console.log("Total: " + Array.from(arr).length, '\n' + "Counter: " + counter);
-      await scraper(link);
+    /* Combining all the links */
+    const embededLinks = await parseEmbededLinks();
+    const combinedLinks = [...links, ...embededLinks];
+    const uniqLinks = onlyUniqLinks(combinedLinks);
+
+    spinner.succeed(`Total count links: ${uniqLinks.length}`)
+    console.log(uniqLinks);
+
+    /* Parse emails on each link */
+    for (let link of uniqLinks) {
+      const content = await puppeteer(link);
+      parseEmails(content, link, emails);
     }
+
+    /* Only unique emails */
+    const uniqueEmails = emails.filter(onlyUnique);
+    console.log("Total unique emails finded: " + uniqueEmails.length);
+    console.log(uniqueEmails);
+
+  } catch (error) {
+    console.log(error);
   }
-  await iterator(arrayOfLinks);
+}
 
-})(BASE_URL)
-
-
-// linksList(BASE_URL);
+if (!argv.url) {
+  console.log("Specify the url using the -url <...> flag when running the script");
+  process.exit(1);
+} else {
+  scraper(BASE_URL);
+}
